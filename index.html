@@ -1,14 +1,16 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FarmGML-4D</title>
+    <title>FarmGML-4D (Corrigido)</title>
     <link href="Cesium-1.135/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <style>
+        /* Bloco CSS ÚNICO E CORRIGIDO */
         body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";}
         #cesiumContainer { width: 100%; height: 100vh; }
-        /* */
+        
         #toolbar {
             position: absolute; /* Flutua sobre o mapa */
             top: 10px;
@@ -50,7 +52,6 @@
         }
 
         /* --- CSS para o "Toggle Switch" (chave seletora) --- */
-        /* O contêiner do switch */
         .switch {
             position: relative;
             display: inline-block;
@@ -58,14 +59,12 @@
             height: 26px; /* Altura do switch */
         }
 
-        /* Esconde o checkbox HTML padrão */
         .switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
 
-        /* O "trilho" deslizante */
         .slider {
             position: absolute;
             cursor: pointer;
@@ -79,7 +78,6 @@
             border-radius: 34px;
         }
 
-        /* O "círculo" que se move */
         .slider:before {
             position: absolute;
             content: "";
@@ -93,13 +91,11 @@
             border-radius: 50%;
         }
 
-        /* O que acontece quando está MARCADO (checked) */
         input:checked + .slider {
             background-color: #57b32c; /* Cor verde do Sandcastle */
         }
 
         input:checked + .slider:before {
-            /* Move o círculo para a direita */
             -webkit-transform: translateX(20px);
             -ms-transform: translateX(20px);
             transform: translateX(20px);
@@ -111,113 +107,206 @@
 <body>
     
     <div id="toolbar">
-        <button id="btnHome">Ir para Casa (Brasil)</button>
+        <select id="menuLocalizacao">
+            <option value="vicosa">Ir para Viçosa</option>
+            <option value="brasilia">Ir para Brasília</option>
+            <option value="rio">Ir para Rio de Janeiro</option>
+        </select>
+
         
+        <button id="btnDestacarEstados">Destacar 4 Estados</button>
+
         <div class="toggle-container">
-            <span>Ver Edificações</span>
+            <span>Prédios (Global)</span>
             <label class="switch">
                 <input type="checkbox" id="togglePredios" checked>
                 <span class="slider"></span>
             </label>
         </div>
 
-        <select id="menuLocalizacao">
-            <option value="vicosa">Ir para Viçosa</option>
-            <option value="brasilia">Ir para Brasília</option>
-            <option value="rio">Ir para Rio de Janeiro</option>
-        </select>
+        
+        <div class="toggle-container" id="containerToggleEstados">
+            <span>Estados (Brasil)</span>
+            <label class="switch">
+                <input type="checkbox" id="toggleEstados" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        
+        <div class="toggle-container" id="containerToggleBahia" style="display: none;">
+            <span>Municípios (Bahia)</span>
+            <label class="switch">
+                <input type="checkbox" id="toggleBahia" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
     </div>
     
     <div id="cesiumContainer"></div>
 
     <script src="Cesium-1.135/Build/Cesium/Cesium.js"></script>
 
-    <script>
-        // Define o token de acesso no objeto global 'Cesium'
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjU1NjM1Mi05Y2VmLTQzNWQtOWJlZC1lN2ZjOTQ5NTRjNjgiLCJpZCI6MjQ1ODA1LCJpYXQiOjE3MjgwMDc2NTZ9.llL11YcDPkvbe-fCSRdKcOSqjylh8BGXgPLRZKupKoU';
-        // 4. Precisamos envolver nosso código em uma função 'async'
-        //    para poder usar a palavra-chave 'await'.
-        async function setupCesium() {
+<script>
+    /* ===============================
+       1. TOKEN CESIUM
+       =============================== */
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjU1NjM1Mi05Y2VmLTQzNWQtOWJlZC1lN2ZjOTQ5NTRjNjgiLCJpZCI6MjQ1ODA1LCJpYXQiOjE3MjgwMDc2NTZ9.llL11YcDPkvbe-fCSRdKcOSqjylh8BGXgPLRZKupKoU';
 
-            // 5. Todas as classes do Cesium agora são acessadas
-            //    através do objeto global 'Cesium.'
-            const viewer = new Cesium.Viewer('cesiumContainer', {
+    /* ===============================
+       2. FUNÇÃO PRINCIPAL
+       =============================== */
+    async function setupCesium() {
+
+        try {
+
+            const viewer = new Cesium.Viewer("cesiumContainer", {
                 terrain: Cesium.Terrain.fromWorldTerrain(),
             });
 
-            // Fly the camera to San Francisco at the given longitude, latitude, and height.
-            viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(-42.8775,-20.7555, 15000),
-                orientation: {
-                    heading: Cesium.Math.toRadians(0.0),
-                    pitch: Cesium.Math.toRadians(-90.0),
+            /* ===============================
+               3. CORES PADRÃO E DESTAQUE
+               =============================== */
+            const corPadrao = Cesium.Color.DODGERBLUE.withAlpha(0.4);
+            const corDestaque = Cesium.Color.RED.withAlpha(0.6);
+
+            /* ===============================
+               3.5 CARREGAR PRÉDIOS (OSM)
+               =============================== */
+            const primitivesPredios = await Cesium.createOsmBuildingsAsync();
+            viewer.scene.primitives.add(primitivesPredios);
+
+            /* ===============================
+               4. CARREGAR GEOJSON do BRASIL (ARQUIVO LOCAL)
+               =============================== */
+            const urlEstadosBrasil = "mapa_Brasil.geojson"; 
+            const dsBrasilEstados = await Cesium.GeoJsonDataSource.load(urlEstadosBrasil, {
+                stroke: Cesium.Color.WHITE,
+                fill: corPadrao,
+                strokeWidth: 2
+            });
+            await viewer.dataSources.add(dsBrasilEstados);
+
+            /* ===============================
+               5. CARREGAR MUNICÍPIOS DA BAHIA (ARQUIVO LOCAL)
+               =============================== */
+            const urlMunicipiosBahia = "ESTADO-BAHIA.geojson";
+            const dsBahiaMunicipios = await Cesium.GeoJsonDataSource.load(urlMunicipiosBahia, {
+                stroke: Cesium.Color.YELLOW,
+                fill: Cesium.Color.YELLOW.withAlpha(0.2),
+                strokeWidth: 1,
+            });
+            dsBahiaMunicipios.show = false;
+            await viewer.dataSources.add(dsBahiaMunicipios);
+
+            /* =========================================
+               6. TOGGLES DE VISIBILIDADE — CONTROLE UI
+               ========================================= */
+            document.getElementById("togglePredios").addEventListener("change", e => {
+                primitivesPredios.show = e.target.checked;
+            });
+            document.getElementById("toggleEstados").addEventListener("change", e => {
+                dsBrasilEstados.show = e.target.checked;
+                if (!e.target.checked) {
+                    dsBahiaMunicipios.show = false;
+                    document.getElementById("containerToggleBahia").style.display = "none";
                 }
             });
-            
-            // Add Cesium OSM Buildings, a global 3D buildings layer.
-            const buildingTileset = await Cesium.createOsmBuildingsAsync();
-            viewer.scene.primitives.add(buildingTileset);
-       
-            // --- ---
+            document.getElementById("toggleBahia").addEventListener("change", e => {
+                dsBahiaMunicipios.show = e.target.checked;
+            });
 
-            // 1. Conectar o botão "Ir para Casa"
-            document.getElementById('btnHome').addEventListener('click', function() {
-                console.log('Botão "Home" clicado!');
-                // Voa para uma nova localização (ex: Brasil)
-                viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(-42.8775,-20.7555, 15000), // Viçosa
-                    orientation: {
-                        heading: Cesium.Math.toRadians(0.0),
-                        pitch: Cesium.Math.toRadians(-90.0),
+            /* ====================================
+               7. BOTÃO DESTACAR ESTADOS (CORRIGIDO)
+               ==================================== */
+            document.getElementById("btnDestacarEstados").addEventListener("click", () => {
+                const estadosParaDestacar = ["Bahia", "São Paulo", "Rio de Janeiro", "Minas Gerais"];
+                const entities = dsBrasilEstados.entities.values;
+
+                for (let ent of entities) {
+                    
+                    // --- CORREÇÃO AQUI ---
+                    // Removemos o .getValue()
+                    const nomeEstado = ent.properties.nome; 
+
+                    if (estadosParaDestacar.includes(nomeEstado)) {
+                        ent.polygon.material = corDestaque;
+                        ent.polygon.extrudedHeight = 100000.0;
+                    } else {
+                        // Garante que polígonos não-destacados fiquem normais
+                        // (Não precisamos checar se `ent.polygon` existe,
+                        // pois o GeoJSONDataSource garante isso)
+                        ent.polygon.material = corPadrao;
+                        ent.polygon.extrudedHeight = 0;
                     }
-                });
+                }
             });
 
-            // 2. Conectar a caixa "Mostrar Prédios" (toggle)
-            document.getElementById('togglePredios').addEventListener('change', function(evento) {
-                // 'evento.target.checked' nos diz se a caixa está marcada
-                const estaMarcado = evento.target.checked;
-                console.log('Toggle mudou para:', estaMarcado);
-                
-                // Acessamos o 'buildingTileset' que carregamos lá em cima
-                buildingTileset.show = estaMarcado;
-                buildingTileset.show = evento.target.checked;
-            });
-
-            // 3. Conectar o Menu <select>
-            document.getElementById('menuLocalizacao').addEventListener('change', function(evento) {
-                const local = evento.target.value; // "vicosa", "brasilia" ou "rio"
-                
-                if (local === 'vicosa') {
-                    // Voa para Viçosa
+            /* ====================================
+               8. MENU DE LOCALIZAÇÃO (FlyTo)
+               ==================================== */
+            document.getElementById("menuLocalizacao").addEventListener("change", e => {
+                const local = e.target.value;
+                const locais = {
+                    vicosa:  { lon: -42.8775, lat: -20.7555, altura: 15000 },
+                    brasilia:{ lon: -47.9292, lat: -15.7801, altura: 15000 },
+                    rio:     { lon: -43.1729, lat: -22.9068, altura: 5000  }
+                };
+                if (locais[local]) {
                     viewer.camera.flyTo({
-                        destination: Cesium.Cartesian3.fromDegrees(-42.8775,-20.7555, 15000),
-                        orientation: {
-                            heading: Cesium.Math.toRadians(0.0),
-                            pitch: Cesium.Math.toRadians(-90.0),
-                        }
-                    });
-                } else if (local === 'brasilia') {
-                    // Voa para Brasília
-                    viewer.camera.flyTo({
-                        destination: Cesium.Cartesian3.fromDegrees(-47.9292, -15.7801, 15000),
-                    });
-                } else if (local === 'rio') {
-                    // Voa para o Rio de Janeiro
-                    viewer.camera.flyTo({
-                        destination: Cesium.Cartesian3.fromDegrees(-43.1729, -22.9068, 5000),
+                        destination: Cesium.Cartesian3.fromDegrees(
+                            locais[local].lon,
+                            locais[local].lat,
+                            locais[local].altura
+                        ),
+                        orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45) }
                     });
                 }
             });
 
+            /* ===========================================
+               9. DRILL-DOWN: CLIQUE NO ESTADO (CORRIGIDO)
+               =========================================== */
+            const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+            handler.setInputAction(click => {
+                const pickedObject = viewer.scene.pick(click.position);
+                if (!Cesium.defined(pickedObject) || !pickedObject.id) return;
 
+                const entity = pickedObject.id;
+                if (entity.dataSource !== dsBrasilEstados) return;
+
+                // --- CORREÇÃO AQUI ---
+                // Removemos o .getValue()
+                const nomeEstado = entity.properties.nome; 
+                
+                console.log("Estado clicado:", nomeEstado);
+
+                if (nomeEstado === "Bahia") {
+                    viewer.flyTo(entity);
+                    dsBrasilEstados.show = false;
+                    document.getElementById("toggleEstados").checked = false;
+                    dsBahiaMunicipios.show = true;
+                    document.getElementById("toggleBahia").checked = true;
+                    document.getElementById("containerToggleBahia").style.display = "block";
+                }
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+            /* ====================================
+               10. VISÃO INICIAL (Viçosa)
+               ==================================== */
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(-42.8775, -20.7555, 15000),
+                orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45) }
+            });
+
+        } catch (error) {
+            console.error("ERRO CRÍTICO DURANTE O SETUP DO CESIUM:", error);
+            alert("Erro ao carregar o WebGIS. Verifique o console (F12).");
         }
-        
-        // 6. Chame a função para executar o código
-        setupCesium();
-        
+    }
 
-
-    </script>
-</body>
-</html>
+    /* ===============================
+       11. INICIAR APLICAÇÃO
+       =============================== */
+    setupCesium();
+</script>
