@@ -132,15 +132,7 @@
                 <span class="slider"></span>
             </label>
         </div>
-
         
-        <div class="toggle-container" id="containerToggleBahia" style="display: none;">
-            <span>Municípios (Bahia)</span>
-            <label class="switch">
-                <input type="checkbox" id="toggleBahia" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
     </div>
     
     <div id="cesiumContainer"></div>
@@ -149,12 +141,12 @@
 
 <script>
     /* ===============================
-       1. TOKEN CESIUM
+       TOKEN CESIUM
        =============================== */
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjU1NjM1Mi05Y2VmLTQzNWQtOWJlZC1lN2ZjOTQ5NTRjNjgiLCJpZCI6MjQ1ODA1LCJpYXQiOjE3MjgwMDc2NTZ9.llL11YcDPkvbe-fCSRdKcOSqjylh8BGXgPLRZKupKoU';
 
     /* ===============================
-       2. FUNÇÃO PRINCIPAL
+       FUNÇÃO PRINCIPAL
        =============================== */
     async function setupCesium() {
 
@@ -165,37 +157,34 @@
             });
 
             /* ===============================
-               3. CORES PADRÃO E DESTAQUE
+               CORES PADRÃO E DESTAQUE
                =============================== */
             const corPadrao = Cesium.Color.DODGERBLUE.withAlpha(0.4);
             const corDestaque = Cesium.Color.RED.withAlpha(0.6);
 
             /* ===============================
-               3.5 CARREGAR PRÉDIOS (OSM)
+               CARREGAR PRÉDIOS (OSM)
                =============================== */
             const primitivesPredios = await Cesium.createOsmBuildingsAsync();
             viewer.scene.primitives.add(primitivesPredios);
 
             /* ===============================
-               4. CARREGAR GEOJSON do BRASIL (ARQUIVO LOCAL)
+               CARREGAR GEOJSON do BRASIL (ARQUIVO LOCAL)
                =============================== */
             const urlEstadosBrasil = "mapa_Brasil.geojson"; 
             const dsBrasilEstados = await Cesium.GeoJsonDataSource.load(urlEstadosBrasil, {
                 stroke: Cesium.Color.WHITE,
                 fill: corPadrao,
                 strokeWidth: 2
-            });
-            await viewer.dataSources.add(dsBrasilEstados);
+            });await viewer.dataSources.add(dsBrasilEstados);
 
             /* ====================================
-               7. BOTÃO DESTACAR Exemplo FarmGML
+               BOTÃO Exemplo FarmGML
                ==================================== */
-            document.getElementById("btnDestacarFarm").addEventListener("click", () => {
-                const FarmParaDestacar = ["FarmGML_Model"];
-            });
+
 
             /* ====================================
-               8. MENU DE LOCALIZAÇÃO (FlyTo)
+               MENU DE LOCALIZAÇÃO (FlyTo)
                ==================================== */
             document.getElementById("menuLocalizacao").addEventListener("change", e => {
                 const local = e.target.value;
@@ -216,26 +205,8 @@
                 }
             });
 
-            /* ===========================================
-               9. DRILL-DOWN: CLIQUE NO ESTADO (CORRIGIDO)
-               =========================================== */
-            const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-            handler.setInputAction(click => {
-                const pickedObject = viewer.scene.pick(click.position);
-                if (!Cesium.defined(pickedObject) || !pickedObject.id) return;
-
-                const entity = pickedObject.id;
-                if (entity.dataSource !== dsBrasilEstados) return;
-
-                // --- CORREÇÃO AQUI ---
-                const nomeEstado = entity.properties.nome; 
-                
-                console.log("Estado clicado:", nomeEstado);
-
-            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
             /* ====================================
-               10. VISÃO INICIAL (Viçosa)
+               VISÃO INICIAL (Viçosa)
                ==================================== */
             viewer.camera.flyTo({
                 destination: Cesium.Cartesian3.fromDegrees(-42.8745, -20.7855, 3000),
