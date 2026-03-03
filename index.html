@@ -155,74 +155,39 @@
             const viewer = new Cesium.Viewer("cesiumContainer", {
                 terrain: Cesium.Terrain.fromWorldTerrain(),
             });
+
         /* ====================================
-        LÓGICA PARA CARREGAR FARMGML
+        CARREGAR DADOS DO POSTGIS (3D TILES)
         ==================================== */
         document.getElementById("btnDestacarFarm").addEventListener("click", async () => {
             try {
-                // 1. Carregar o arquivo GML (Substitua pelo caminho real do seu arquivo)
-                const response = await fetch('exemplo_fazenda.gml');
-                const gmlText = await response.text();
-                
-                // 2. Parse do XML
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(gmlText, "text/xml");
+                // Carrega o tileset gerado pelo pg2b3dm
+                const tileset = await Cesium.Cesium3DTileset.fromUrl('./camadas/fazendas/tileset.json', {
+                    // Melhora a visualização no terreno
+                    heightOffset: 0 
+                });
 
-                // 3. Localizar os polígonos (buscando por gml:posList)
-                const poligonos = xmlDoc.getElementsByTagNameNS("*", "posList");
+                viewer.scene.primitives.add(tileset);
 
-                if (poligonos.length === 0) {
-                    alert("Nenhuma geometria encontrada no GML.");
-                    return;
-                }
-
-                for (let i = 0; i < poligonos.length; i++) {
-                    const coordsRaw = poligonos[i].textContent.trim().split(/\s+/);
-                    const positions = [];
-
-                    // 4. Converter UTM (31983) para WGS84 
-                    // NOTA: Para precisão total, use a biblioteca 'proj4js'. 
-                    // Abaixo, um exemplo de extração das coordenadas:
-                    for (let j = 0; j < coordsRaw.length; j += 3) {
-                        const easting = parseFloat(coordsRaw[j]);
-                        const northing = parseFloat(coordsRaw[j + 1]);
-                        
-                        // Exemplo simplificado: Aqui você deve aplicar a conversão UTM -> Lat/Lon
-                        // Se o GML já estivesse em WGS84 (lat/lon), seria apenas:
-                        // positions.push(Cesium.Cartesian3.fromDegrees(easting, northing));
+                // Estilização baseada nos atributos do seu banco (ex: ZarcScore)
+                tileset.style = new Cesium.Cesium3DTileStyle({
+                    color: {
+                        conditions: [
+                            ['${zarcscore} >= 80', 'color("green", 0.6)'],
+                            ['${zarcscore} >= 70', 'color("yellow", 0.6)'], // Cobre de 70 a 79
+                            ['${zarcscore} < 70', 'color("orange", 0.6)'],
+                            ['true', 'color("white", 0.5)']
+                        ]
                     }
+                });
 
-                    // 5. Criar a Entidade no Cesium (Simulação com coordenadas de Viçosa para visualização)
-                    // Como seu GML é um exemplo técnico, vou forçar a visualização no local correto:
-                    const farmEntity = viewer.entities.add({
-                        name: "Talhão de Soja (FarmGML)",
-                        polygon: {
-                            hierarchy: Cesium.Cartesian3.fromDegreesArray([
-                                -42.87, -20.78,
-                                -42.86, -20.78,
-                                -42.86, -20.79,
-                                -42.87, -20.79
-                            ]),
-                            material: Cesium.Color.GREEN.withAlpha(0.5),
-                            outline: true,
-                            outlineColor: Cesium.Color.WHITE
-                        },
-                        description: `
-                            <table>
-                                <tr><th>Cultura:</th><td>Soja</td></tr>
-                                <tr><th>Área:</th><td>50.0 ha</td></tr>
-                                <tr><th>ID:</th><td>Talhao_Soja_01</td></tr>
-                            </table>`
-                    });
-
-                    viewer.zoomTo(farmEntity);
-                }
-
-                alert("FarmGML carregado com sucesso!");
-
+                // Voar para a fazenda
+                await viewer.zoomTo(tileset);
+                
+                console.log("Camada FarmGML do PostGIS carregada com sucesso!");
             } catch (error) {
-                console.error("Erro ao processar FarmGML:", error);
-                alert("Erro ao ler o arquivo GML. Verifique o console.");
+                console.error("Erro ao carregar o tileset:", error);
+                alert("Erro ao carregar os dados. Verifique se a pasta 'tileset' está no local correto.");
             }
         });
             /* ===============================
