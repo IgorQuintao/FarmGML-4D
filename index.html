@@ -161,10 +161,19 @@
         ==================================== */
         document.getElementById("btnDestacarFarm").addEventListener("click", async () => {
             try {
+                // 1. ALTERAR TERRENO PARA WGS84 ELLIPSOID (PLANO)
+                // Isso remove o relevo 3D das montanhas
+                const togglePredios = document.getElementById("togglePredios");
+                const toggleEstados = document.getElementById("toggleEstados");
+                
+                togglePredios.checked = false;
+                toggleEstados.checked = false;
+                if (primitivesPredios) primitivesPredios.show = false;
+                if (dsBrasilEstados) dsBrasilEstados.show = false;
                 // Carrega o tileset gerado pelo pg2b3dm
                 const tileset = await Cesium.Cesium3DTileset.fromUrl('./camadas/fazendas/tileset.json', {
                     // Melhora a visualização no terreno
-                    heightOffset: 0 
+                    heightOffset: 1000
                 });
 
                 viewer.scene.primitives.add(tileset);
