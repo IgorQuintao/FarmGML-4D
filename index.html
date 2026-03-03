@@ -200,9 +200,9 @@
             document.getElementById("menuLocalizacao").addEventListener("change", e => {
                 const local = e.target.value;
                 const locais = {
-                    vicosa:  { lon: -42.8045, lat: -20.7555, altura: 15000 },
-                    brasilia:{ lon: -47.9292, lat: -15.7801, altura: 15000 },
-                    rio:     { lon: -43.1729, lat: -22.9068, altura: 5000  }
+                    vicosa:  { lon: -42.8745, lat: -20.7855, altura: 3000 },
+                    brasilia:{ lon: -47.9000, lat: -15.8900, altura: 10000 },
+                    rio:     { lon: -43.2000, lat: -23.0000, altura: 1500  }
                 };
                 if (locais[local]) {
                     viewer.camera.flyTo({
@@ -238,8 +238,8 @@
                10. VISÃO INICIAL (Viçosa)
                ==================================== */
             viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(-57, -53, 15000),
-                orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45) }
+                destination: Cesium.Cartesian3.fromDegrees(-42.8745, -20.7855, 3000),
+                orientation: { heading: 0, pitch: Cesium.Math.toRadians(-44) }
             });
 
         } catch (error) {
