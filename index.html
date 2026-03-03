@@ -226,20 +226,6 @@
                 dsBrasilEstados.show = e.target.checked;
             });
 
-            /* ====================================
-            LÓGICA DO BOTÃO FARMGML (EXEMPLO)
-            ==================================== */
-            document.getElementById("btnDestacarFarm").addEventListener("click", () => {
-                // Exemplo: Destacar um polígono específico ou voar para uma coordenada de teste
-                // Aqui você pode carregar um arquivo GML ou destacar uma entidade existente.
-                alert("Funcionalidade FarmGML acionada! Implemente aqui o carregamento do seu arquivo GML.");
-                
-                // Exemplo de voo para uma fazenda fictícia em Viçosa
-                viewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(-42.8590, -20.7620, 1000),
-                    orientation: { pitch: Cesium.Math.toRadians(-35) }
-                });
-            });
 
             /* ====================================
                MENU DE LOCALIZAÇÃO (FlyTo)
