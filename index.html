@@ -114,7 +114,7 @@
         </select>
 
         
-        <button id="btnDestacarEstados">FarmGML</button>
+        <button id="btnDestacarFarm">Exemplo FarmGML</button>
 
         <div class="toggle-container">
             <span>Prédios (Global)</span>
@@ -187,59 +187,11 @@
             });
             await viewer.dataSources.add(dsBrasilEstados);
 
-            /* ===============================
-               5. CARREGAR MUNICÍPIOS DA BAHIA (ARQUIVO LOCAL)
-               =============================== */
-            const urlMunicipiosBahia = "ESTADO-BAHIA.geojson";
-            const dsBahiaMunicipios = await Cesium.GeoJsonDataSource.load(urlMunicipiosBahia, {
-                stroke: Cesium.Color.YELLOW,
-                fill: Cesium.Color.YELLOW.withAlpha(0.2),
-                strokeWidth: 1,
-            });
-            dsBahiaMunicipios.show = false;
-            await viewer.dataSources.add(dsBahiaMunicipios);
-
-            /* =========================================
-               6. TOGGLES DE VISIBILIDADE — CONTROLE UI
-               ========================================= */
-            document.getElementById("togglePredios").addEventListener("change", e => {
-                primitivesPredios.show = e.target.checked;
-            });
-            document.getElementById("toggleEstados").addEventListener("change", e => {
-                dsBrasilEstados.show = e.target.checked;
-                if (!e.target.checked) {
-                    dsBahiaMunicipios.show = false;
-                    document.getElementById("containerToggleBahia").style.display = "none";
-                }
-            });
-            document.getElementById("toggleBahia").addEventListener("change", e => {
-                dsBahiaMunicipios.show = e.target.checked;
-            });
-
             /* ====================================
-               7. BOTÃO DESTACAR ESTADOS (CORRIGIDO)
+               7. BOTÃO DESTACAR Exemplo FarmGML
                ==================================== */
-            document.getElementById("btnDestacarEstados").addEventListener("click", () => {
-                const estadosParaDestacar = ["Bahia", "São Paulo", "Rio de Janeiro", "Minas Gerais"];
-                const entities = dsBrasilEstados.entities.values;
-
-                for (let ent of entities) {
-                    
-                    // --- CORREÇÃO AQUI ---
-                    // Removemos o .getValue()
-                    const nomeEstado = ent.properties.nome; 
-
-                    if (estadosParaDestacar.includes(nomeEstado)) {
-                        ent.polygon.material = corDestaque;
-                        ent.polygon.extrudedHeight = 100000.0;
-                    } else {
-                        // Garante que polígonos não-destacados fiquem normais
-                        // (Não precisamos checar se `ent.polygon` existe,
-                        // pois o GeoJSONDataSource garante isso)
-                        ent.polygon.material = corPadrao;
-                        ent.polygon.extrudedHeight = 0;
-                    }
-                }
+            document.getElementById("btnDestacarFarm").addEventListener("click", () => {
+                const FarmParaDestacar = ["FarmGML_Model"];
             });
 
             /* ====================================
@@ -276,26 +228,17 @@
                 if (entity.dataSource !== dsBrasilEstados) return;
 
                 // --- CORREÇÃO AQUI ---
-                // Removemos o .getValue()
                 const nomeEstado = entity.properties.nome; 
                 
                 console.log("Estado clicado:", nomeEstado);
 
-                if (nomeEstado === "Bahia") {
-                    viewer.flyTo(entity);
-                    dsBrasilEstados.show = false;
-                    document.getElementById("toggleEstados").checked = false;
-                    dsBahiaMunicipios.show = true;
-                    document.getElementById("toggleBahia").checked = true;
-                    document.getElementById("containerToggleBahia").style.display = "block";
-                }
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
             /* ====================================
                10. VISÃO INICIAL (Viçosa)
                ==================================== */
             viewer.camera.flyTo({
-                destination: Cesium.Cartesian3.fromDegrees(-42.8775, -20.7555, 15000),
+                destination: Cesium.Cartesian3.fromDegrees(-57, -53, 15000),
                 orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45) }
             });
 
